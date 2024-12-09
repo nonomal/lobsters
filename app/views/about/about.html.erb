@@ -7,8 +7,8 @@
   <p>
   Lobsters is a computing-focused community centered around link aggregation
   and discussion, launched on July 3rd, 2012.
-  The administrator is <a href="/u/pushcx">Peter Bhat Harkins</a> ("pushcx"), contact him with any support issues.
-  Lobsters was created by <a href="/u/jcs">joshua stein</a>
+  The administrator is <a href="/~pushcx">Peter Bhat Harkins</a> ("pushcx"), contact him or <a href="/moderators">another moderator</a> with any support issues.
+  Lobsters was created by <a href="/~jcs">joshua stein</a>
   with careful design touches to encourage a healthy community:
   </p>
 
@@ -20,7 +20,55 @@
     <li>and <a href="#features">many more features</a> that have been added over the years.</li>
   </ul>
 
-  <h2 id="tagging">Tags and Topicality</h2>
+
+  <h2 id="guidelines">Guidelines</h2>
+
+  <p>
+    <strong>Climate</strong>:
+    Lobsters is more of a garden party than a debate club.
+    We're learning things we didn't know to be curious about and sharing what we've made.
+    Disagreements are normal but fights are not; it's OK to make your point, share a resource, and <a href="https://xkcd.com/386">let someone be wrong</a>.
+    Abuse and bigotry are unwelcome.
+  </p>
+
+  <div id="topicality">
+    <p>
+    <strong>Topicality</strong>:
+    Lobsters is focused pretty narrowly on computing; tags like <a href="/t/art">art</a> don't imply every piece of art is on-topic.
+    Some rules of thumb for great stories to submit:
+    Will this improve the reader's next program?
+    Will it deepen their understanding of their last program?
+    Will it be more interesting in five or ten years?
+    </p>
+
+    <p>
+    Some things that are off-topic here but popular on larger, similar sites:
+    entrepreneurship, management, news about companies that employ a lot of programmers,
+    investing, world events, anthropology, self-help, personal productivity systems,
+    last-resort customer service requests via public shaming,
+    "I wanted to see what this site's amazing users think about this off-topic thing",
+    and
+    defining the single morally correct economic and political system for the entire world when we can't even settle tabs vs. spaces.
+    </p>
+  </div>
+
+  <p>
+    <strong>Brigading</strong>:
+    Lobsters is not to be used to whip up an outrage mob and direct them at targets, especially individuals and small projects.
+    It always feels righteous at first and becomes an awful tool for abuse.
+    For contentious topics, try to submit a link to an overviews rather than linking into a project's community spaces like issue trackers and mailing lists.
+    There isn't a clear-cut line between this and discussing trends and advocating for improvements in the field, so expect frustrating judgement calls.
+  </p>
+
+  <p id="self-promo">
+    <strong>Self-promotion</strong>:
+    It's great to have authors participate in the community,
+    but not to exploit it as a write-only tool for product announcements or driving traffic to their work.
+    As a rule of thumb, self-promo should be less than a quarter of one's stories and comments.
+  </p>
+
+
+  <h2 id="tagging">Tags</h2>
   <p>
   When links or stories are submitted, they must be tagged by the submitter from a list of predefined <a href="/tags">tags</a>.
   Users can choose to <a href="/filters">filter</a> out or
@@ -68,26 +116,10 @@
   Explain the scope, list existing stories that should have been tagged, make a case for why people would want to specifically filter it out, and justify the increased complexity for submitters and mods.
   </p>
 
-  <div id="topicality">
-    <p>
-    Lobsters is focused pretty narrowly on computing; tags like <a href="/t/art">art</a> don't imply every piece of art is on-topic.
-    Some rules of thumb for great stories to submit: Will this improve the reader's next program? Will it deepen their understanding of their last program? Will it be more interesting in five or ten years?
-    </p>
-
-    <p>
-    Some things that are off-topic here but popular on larger, similar sites:
-    entrepreneurship, management, news about companies that employ a lot of programmers,
-    investing, world events, anthropology, self-help, personal productivity systems,
-    last-resort customer service requests via public shaming,
-    "I wanted to see what this site's amazing users think about this off-topic thing",
-    and
-    defining the single morally correct economic and political system for the entire world when we can't even settle tabs vs. spaces.
-    </p>
-  </div>
 
   <h2 id="invitations">Invitation Tree</h2>
   <p>
-  The full <a href="/u">user tree</a> is public and each user's profile
+  The full <%= link_to 'user tree', users_tree_path %> is public and each user's profile
   shows who invited them.  This provides some degree of accountability and
   helps identify voting rings.
   </p>
@@ -106,15 +138,13 @@
     resubmit links that have been seen before,
     or
     <span id="new-user-tags">use tags for meta discussions or that are prone to off-topic stories
-      (<%= raw(
-        Tag.not_permitted_for_new_users.pluck(:tag).map { |t| link_to t, tag_path(t) }.join(' ')
-      ) %>).
+    (<% Tag.not_permitted_for_new_users.pluck(:tag).map { |t| %><%= link_to t, tag_path(t) %> <%- } %>).
     </span>
   </p>
 
   <p>
-  The quickest way to receive an invitation is to talk to someone you <a href="/u">recognize from the site</a>.
-  If you wrote a link that was posted, please reach out in <a href="/chat">chat</a>, we'd love to have you join the discussion.
+  The quickest way to receive an invitation is to talk to someone you <%= link_to 'recognize from the site', users_tree_path %>.
+  If you wrote a link that was posted, please reach out in <a href="/chat">chat</a>, we'd love to have you <a href="#self-promo">join the community</a>.
   Finally, if you can't find anyone you know in the invitation tree and didn't author something posted to the site,
   <% if Rails.application.allow_invitation_requests? %>
     you can <a href="/invitations/request">request an invite</a>.
@@ -130,20 +160,21 @@
   moderators will consider disabling their inviter's ability to send invitations or, rarely, also ban them.
   </p>
 
+
   <h2 id="ranking">Ranking</h2>
   <p>
   All story and comment ranking on this site comes from user activity.
   All users have equal votes, with no special priorities or penalties for specific users or domains.
   Moderators have no ability to raise or <a href="http://www.righto.com/2013/11/how-hacker-news-ranking-really-works.html">lower</a> the rankings of stories or comments (besides voting like any user).
-  Per-tag <a href="/filters">hotness modifiers</a> affect all stories with
-  those tags, but these modifiers (and <a href="https://lobste.rs/moderations?utf8=%E2%9C%93&moderator=(All)&what[tags]=tags">changes</a> to them) are public.
+  Per-tag <a href="/filters">hotness modifiers</a> affect all stories with those tags;
+  these modifiers (and <a href="https://lobste.rs/moderations?utf8=%E2%9C%93&moderator=(All)&what[tags]=tags">changes</a> to them) are public.
   Domains used for marketing analytics are banned and tracking parameters are removed from links
-  (look for <tt>TRACKING_DOMAINS</tt> and <tt>utm_</tt> in <a href="https://github.com/lobsters/lobsters/blob/master/app/models/story.rb">story.rb</a>).
+  (look for <tt>utm_</tt> in <a href="https://github.com/lobsters/lobsters/blob/master/app/models/story.rb">story.rb</a>).
   </p>
 
   <div id="flags">
     <p>
-    Users can flag stories and comments when there's a serious problem that needs moderator attention.
+    Users can flag stories and comments when there's a serious problem that needs moderator attention; two flags are needed to add the story or comment to the moderation queue.
     Users must reach <%= User::MIN_KARMA_TO_FLAG %> karma to flag.
     To guide usage and head off distracting meta conversations ("Why was this flagged!?", etc), flagging requires selecting from a preset list of reasons.
     </p>
@@ -173,10 +204,11 @@
   (Please don't use flagging to try to push down topics or people you don't like; click "hide" on the story and <a href="https://xkcd.com/386">move on</a> rather than clutter up the mod dashboard with false alarms.)
   </p>
 
+
   <h2 id="transparency">Transparency Policy</h2>
   <p>
   All <a href="/moderations">moderator actions</a> on this site are visible to
-  everyone and the identities of those moderators are <a href="/u?moderators=1">public</a>.
+  everyone and the identities of those moderators are <%= link_to 'public', moderators_path %>.
   While the individual actions of a moderator may cause debate, there should be no question about if an action happened or who is responsible.
   </p>
 
@@ -200,7 +232,6 @@
   We have <a href="/stats">some basic stats</a> available,
   and Peter is happy to run queries against the <a href="https://github.com/lobsters/lobsters/blob/master/db/schema.rb">database</a> and Rails/MySQL/nginx logs (but not write them for you),
   as long as they don't reveal personal info like IPs, browsing, and voting or create “worst-of” leaderboards celebrating most-flagged users/comments/stories.
-  If you're an academic researcher, please <a href="https://lobste.rs/s/cqnzl5/lobste_rs_access_pattern_statistics_for">be like MIT</a>, not like <a href="https://github.com/lobsters/lobsters/issues/517">UChicago</a> secretly experimenting on maintainers without IRB review.
   </p>
 
   <p>
@@ -212,6 +243,7 @@
   <a href="https://en.wikipedia.org/wiki/Comp.*_hierarchy">comp.*</a>.
   Or you could use <a href="https://github.com/lobsters/lobsters/">our codebase</a> to start your own site.
   </p>
+
 
   <h2 id="features">Other Technical Features</h2>
 
@@ -288,10 +320,8 @@
   </p></li>
 
   <li><p>
-  <strong><a href="https://twitter.com/lobsters">Official Twitter
-  mirror</a></strong> posts all stories that have reached the front page to
-  the <a href="https://twitter.com/lobsters">@lobsters</a> account on Twitter
-  for easy following, retweeting/sharing, or archiving.
+    <strong><a href="https://botsin.space/@lobsters">Official Fediverse mirror</a></strong>
+    posts all stories that have reached the front page for easy following, retooting/sharing, or archiving.
   </p></li>
 
   <% if false %>
@@ -307,17 +337,18 @@
   </p></li>
   </ul>
 
+
   <h2 id="trivia">Trivia</h2>
 
   <ul>
   <li><p>
   Lobsters is hosted on three <a href="https://slugs.do-api.dev/">VPSs</a> at DigitalOcean:
   a <tt>s-4vcpu-8gb</tt> for the web server,
-  a <tt>s-2vcpu-4gb</tt> for the mariadb server, and
+  a <tt>s-4vcpu-8gb</tt> for the mariadb server, and
   a <tt>s-1vcpu-1gb</tt> for the <a href="/chat">IRC bot</a>.
   Our domain name is registered with <a href="https://cridomains.rs/en">CRI Domains</a>, who donated our first year of registration.
   DNS is provided by <a href="https://dnsimple.com/">DNSimple</a> and
-  we use <a href="https://www.tarsnap.com">Tarsnap</a> for backups, both of which pushcx pays for.
+  we use <a href="https://restic.net/">restic</a> for backups to <a href="https://www.backblaze.com/b2">b2</a>, both of which pushcx pays for.
   Lobsters is cheap to run, so we <a href="https://lobste.rs/s/95uler/would_there_be_interest_patreon_for#c_9l58ia">don't</a> <a href="https://lobste.rs/s/udj6qf/hosting_update#c_jgro9y">take</a> donations.
   </p></li>
 
@@ -334,10 +365,30 @@
   without any deeper meaning.
   <%- require 'digest/md5'; instance_variable_set("@#{controller_name}#{action_name}", Digest::MD5.hexdigest(Rails.env) == 'fd89784e59c72499525556f80289b2c7' && Digest::MD5.hexdigest(Rails.application.name) != '4e7c4ddc593da2e7a1cc8c6dc2d38eba') -%>
   It <a href="https://www.youtube.com/watch?v=ADgS_vMGgzY">has nothing to do</a>
-  with self-help guru Jordan Peterson, whose fans started to
-  <a href="https://www.nytimes.com/2018/05/18/style/jordan-peterson-12-rules-for-life.html">call themselves "lobsters"</a>
+  with
+  <a href="https://www.nytimes.com/2018/05/18/style/jordan-peterson-12-rules-for-life.html">self-help guru</a>
+  Jordan Peterson, whose fans started to <a href="https://www.youtube.com/watch?v=hSNWkRw53Jo&t=2408s">call themselves "lobsters"</a>
   about six years after we started.
   </p></li>
+
+  <li>
+    <p>
+      As a Rails app that's big enough to have real-world complexity but small enough to be easily read,
+      our <a href="https://github.com/lobsters/lobsters">codebase</a> has seen a few interesting uses:
+    </p>
+    <ul>
+      <li>MIT researchers used <a href="https://lobste.rs/s/cqnzl5/lobste_rs_access_pattern_statistics_for">access patterns</a>
+        in development of a <a href="https://lobste.rs/s/uxgjha/noria_dynamic_partially_stateful_data">new database</a>.</li>
+      <li>University of Chicago researchers unethically <a href="https://github.com/lobsters/lobsters/issues/518">experimented</a>
+        on <a href="https://github.com/lobsters/lobsters/issues/517">maintainers</a>
+        with <a href="https://lobste.rs/s/3qgyzp/they_introduce_kernel_bugs_on_purpose#c_bxb4rk">institutional complicity</a>.</li>
+      <li>
+        Shopify's Ruby performance team <a href="https://lobste.rs/s/m9ivcf/we_turned_lobste_rs_into_rails_benchmark">performance tested</a>
+        the YJIT compiler they contributed to MRI Ruby.
+      </li>
+    </ul>
+    <p>Please do <a href="https://lobste.rs/~pushcx">reach out</a> if you find a use for our code!</p>
+  </li>
 
   <li><p>
   We have a backup domain <tt>lobsters.dev</tt> in case of issues with our primary domain.

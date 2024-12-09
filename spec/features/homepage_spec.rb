@@ -1,10 +1,12 @@
-require 'rails_helper'
+# typed: false
+
+require "rails_helper"
 
 RSpec.feature "Reading Homepage", type: :feature do
-  let!(:story) { create(:story) }
+  let!(:story) { create(:story, description: "Preview shown") }
 
   feature "when logged out" do
-    scenario "reading a story" do
+    scenario "homepage" do
       visit "/"
       expect(page).to have_content(story.title)
     end
@@ -15,15 +17,40 @@ RSpec.feature "Reading Homepage", type: :feature do
 
     before(:each) { stub_login_as user }
 
-    scenario "reading a story" do
+    scenario "homepage" do
+      visit "/"
+      expect(page).to have_content(story.title)
+    end
+
+    scenario "shows previews if the user wants" do
+      user.show_story_previews = true
+      user.save!
+
+      visit "/"
+      expect(page).to have_content(story.description)
+    end
+  end
+
+  feature "as moderator" do
+    scenario "homepage as moderator" do
+      mod = create(:user, :moderator)
+      stub_login_as mod
+      visit "/"
+      expect(page).to have_content(story.title)
+    end
+
+    scenario "homepage as moderator with pending hat requests" do
+      create(:hat_request)
+      mod = create(:user, :moderator)
+      stub_login_as mod
       visit "/"
       expect(page).to have_content(story.title)
     end
   end
 
   feature "browsing stories by tag" do
-    let(:tag_a) { Category.first.tags.create(tag: 'A1').tag }
-    let(:tag_b) { Category.first.tags.create(tag: 'B2').tag }
+    let(:tag_a) { Category.first.tags.create!(tag: "A1").tag }
+    let(:tag_b) { Category.first.tags.create!(tag: "B2").tag }
     let!(:ab_story) { create(:story, tags_a: [tag_a, tag_b]) }
     let!(:a_story) { create(:story, tags_a: [tag_a]) }
     let!(:b_story) { create(:story, tags_a: [tag_b]) }

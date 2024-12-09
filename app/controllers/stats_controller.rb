@@ -1,3 +1,5 @@
+# typed: false
+
 class StatsController < ApplicationController
   FIRST_MONTH = Time.new(2012, 7, 3).utc.freeze
   TIMESCALE_DIVISIONS = "1 year".freeze
@@ -7,16 +9,16 @@ class StatsController < ApplicationController
 
     @users_graph = monthly_graph("users_graph", {
       graph_title: "Users joining by month",
-      scale_y_divisions: 100,
+      scale_y_divisions: 100
     }) {
-      User.group("date_format(created_at, '%Y-%m')").count
+      User.group("date_format(created_at, '%Y-%m')").count.to_a.flatten
     }
 
     @active_users_graph = monthly_graph("active_users_graph", {
       graph_title: "Active users by month",
-      scale_y_divisions: 500,
+      scale_y_divisions: 500
     }) {
-      User.connection.execute <<~SQL
+      User.connection.select_all(<<~SQL
         SELECT ym, count(distinct user_id)
         FROM (
           SELECT date_format(created_at, '%Y-%m') as ym, user_id FROM stories
@@ -28,31 +30,32 @@ class StatsController < ApplicationController
         GROUP BY 1
         ORDER BY 1 asc;
       SQL
+                                ).to_a.map(&:values).flatten
     }
 
     @stories_graph = monthly_graph("stories_graph", {
       graph_title: "Stories submitted by month",
-      scale_y_divisions: 250,
+      scale_y_divisions: 250
     }) {
-      Story.group("date_format(created_at, '%Y-%m')").count
+      Story.group("date_format(created_at, '%Y-%m')").count.to_a.flatten
     }
 
     @comments_graph = monthly_graph("comments_graph", {
       graph_title: "Comments posted by month",
-      scale_y_divisions: 1_000,
+      scale_y_divisions: 1_000
     }) {
-      Comment.group("date_format(created_at, '%Y-%m')").count
+      Comment.group("date_format(created_at, '%Y-%m')").count.to_a.flatten
     }
 
     @votes_graph = monthly_graph("votes_graph", {
       graph_title: "Votes cast by month",
-      scale_y_divisions: 10_000,
+      scale_y_divisions: 10_000
     }) {
-      Vote.group("date_format(updated_at, '%Y-%m')").count
+      Vote.group("date_format(updated_at, '%Y-%m')").count.to_a.flatten
     }
   end
 
-private
+  private
 
   def monthly_graph(cache_key, opts)
     Rails.cache.fetch(cache_key, expires_in: 1.day) {
@@ -82,12 +85,12 @@ private
         area_fill: false,
         min_y_value: 0,
         number_format: "%d",
-        show_lines: false,
+        show_lines: false
       }
       graph = TimeSeries.new(defaults.merge(opts))
       graph.add_data(
-        data: yield.to_a.flatten,
-        template: "%Y-%m",
+        data: yield,
+        template: "%Y-%m"
       )
       graph.burn_svg_only
     }

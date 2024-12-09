@@ -1,6 +1,9 @@
 /*
- *= require select2
- *= require_self
+*= require tom-select
+*= require TomSelect_remove_button
+
+after vendor css for easier overriding:
+*= require_self 
 */
 
 /* light and dark mode colorschemes */
@@ -105,7 +108,7 @@ dark = <<-DARK
 
 	/* colored backgrounds and foregrounds */
 	--palette-bg-accent: 253, 78, 72; /* behind dark text */
-	--palette-bg-target: 27, 24, 11;
+	--palette-bg-target: 61, 53, 11;
 
 	--palette-fg-link: 138, 177, 255;
 	--palette-fg-link-visited: 79, 138, 255;
@@ -178,10 +181,6 @@ html.color-scheme-dark {
 /* overall page */
 
 html {
-	/* environment colors */
-	--color-selection-fg: HighlightText;
-	--color-selection-bg: Highlight;
-
 	/* derived colors */
 
 	/* These colors are derived from the light or dark palette. This
@@ -224,9 +223,14 @@ html {
 
 /* generics */
 
-/* force a vertical scrollbar to avoid page-shifting */
 html {
+	/* force a vertical scrollbar to avoid page-shifting */
 	overflow-y: scroll;
+
+	/* avoid automatic resizing of some text elements on phones in landscape */
+	-moz-text-size-adjust: none;
+	-webkit-text-size-adjust: none;
+	text-size-adjust: none;
 }
 
 body, textarea, input, button {
@@ -274,6 +278,7 @@ a.tag {
 	margin-left: 0.25em;
 	padding: 0px 0.4em 1px 0.4em;
 	text-decoration: none;
+	white-space: nowrap;
 }
 a.tag_is_media {
 	background-color: var(--color-tag-media-bg);
@@ -378,6 +383,17 @@ textarea:focus {
 textarea::placeholder {
 	color: var(--color-fg-contrast-7-5);
 }
+.link_post {
+	display: inline;
+}
+input[type="submit"].link_post {
+	background: none;
+	border: none;
+	padding: 0;
+	color: var(--color-fg-link);
+	text-decoration: underline;
+	cursor: pointer;
+}
 
 input[type="submit"]:focus,
 button:focus {
@@ -395,11 +411,26 @@ button:focus {
 	font-style: italic;
 }
 
+form.disowner-form {
+	display: inline;
+	button {
+		background: none;
+		border: none;
+		padding: 0;
+		color: var(--color-fg-contrast-4-5);
+		text-decoration: none;
+		cursor: pointer;
+		outline: none;
+		&:not(.disable):hover {
+			color: var(--color-fg-contrast-4-5);
+		}
+	}
+}
+
 button,
 input[type="button"],
 input[type="reset"],
 input[type="submit"],
-div.select2-choices,
 a.button {
 	background-color: var(--color-button-bg);
 	border-bottom-color: var(--color-fg-shape);
@@ -455,17 +486,17 @@ input.deletion {
 	border: 1px solid var(--color-fg-negative);
 }
 
+#qrsvg {
+	background-color: white;
+	display: inline-block;
+	padding: 5%;
+}
+
 .totp_code::-webkit-inner-spin-button,
 .totp_code::-webkit-outer-spin-button {
 	-webkit-appearance: none;
 	margin: 0;
 }
-
-::selection {
-	color: var(--color-selection-fg);
-	background-color: var(--color-selection-bg);
-}
-
 
 
 /* header */
@@ -523,8 +554,9 @@ header#nav nav.links {
 	display: flex;
 	width: 100%
 }
-header#nav a, header#subnav a {
+header#nav a, header#subnav a, header#subnav input[type="submit"] {
 	color: var(--color-fg-contrast-6);
+	font-weight: bold;
 	margin: 0 0.25rem;
 	text-decoration: none;
 }
@@ -594,7 +626,6 @@ div#gravatar img {
 
 ol.stories,
 ol.comments,
-ol.search_results,
 ol.category_tags {
 	padding: 0;
 	list-style: none;
@@ -616,15 +647,9 @@ ol.comments.comments1 {
 ol.comments1 > li.comments_subtree {
 	margin-left: 11px;
 }
-
-ol.search_results {
-	margin-left: 20px;
-	margin-bottom: 0em;
-	padding-left: 6px;
-}
-
-ol.search_results li.story {
-	padding-bottom: 0.75em;
+ol.comments1 > li.comments_subtree > ol.comments {
+	margin-left: 0;
+	padding-left: 0;
 }
 
 div.voters {
@@ -694,23 +719,46 @@ li div.details {
 	padding-top: 0.1em;
 }
 
-.negative_1 {
-	opacity: 0.7;
-}
-.negative_3 {
-	opacity: 0.6;
-}
-.negative_5 {
-	opacity: 0.5;
+/*
+Stories with negative scores are dimmed by decreasing their opacity.
+However, if the flag or archive dropdowns have an opacity set, it creates a "stacking context",
+which overides the Z index, so the drop down appears under textareas, making them unclickable.
+Thus, the selector for opacity must not target those divs or any of their direct parents.
+We must also becareful to apply to only children and not any of the parents.
+Otherwise it will double apply, resulting in invidual elements being darker.
+
+We'd like to write the following selector to express that directly, but can't until Firefox
+supports it:  https://caniuse.com/?search=%3Ahas
+.negative_1 *:not(.dropdown_parent, :has(*)) { ... }
+*/
+.negative_1 *:not(div, .dropdown_parent, .dropdown_parent > div *, .comments_label, .link, .tags, img),
+.negative_1 .score {
+  opacity: 0.7;
+  }
+
+.negative_3 *:not(div, .dropdown_parent, .dropdown_parent > div *, .comments_label, .link, .tags, img),
+.negative_3 .score {
+  opacity: 0.6;
 }
 
-.comment.bad {
-	opacity: 0.7;
+.negative_5 *:not(div, .dropdown_parent, .dropdown_parent > div *, .comments_label, .link, .tags, img),
+.negative_5 .score {
+  opacity: 0.5;
+}
+
+.comment.bad *:not(div, .dropdown_parent, .dropdown_parent *) {
+  opacity: 0.7;
 }
 
 .comment:target, li:target, p:target, div:target, span:target {
 	background-color: var(--color-bg-target);
 	border-radius: 8px;
+}
+
+.showing-user-comment {
+	background-color: var(--color-bg-target);
+	border-radius: 8px;
+	padding: 3px;
 }
 
 li .link {
@@ -810,6 +858,7 @@ li .comment_parent_tree_line {
 	top: 30px;
 	bottom: 0;
 }
+
 li .comment_parent_tree_line.score_shown {
 	top: 44px;
 }
@@ -836,6 +885,12 @@ div.comment:target div.voters {
 	display: block !important;
 }
 
+.thread_summary {
+	color: var(--color-fg-contrast-4-5);
+	font-size: 9.5pt;
+	/* .comment_folder (-4px margin-left + 1.5em width) + .voters (30px width) */
+	margin-left: calc(-4px + 1.5em + 30px);
+}
 li .byline {
 	color: var(--color-fg-contrast-4-5);
 	font-size: 9.5pt;
@@ -883,9 +938,19 @@ li .byline a.story_has_suggestions {
 	color: var(--color-lobsters-fg-has-suggestions);
 }
 
-li.story.hidden {
+.last_read_newest {
+	border-bottom: 2px solid var(--color-fg-shape);
+	border-top: 0;
+	border-left: 0;
+	border-right: 0;
+	margin: 1em 0 1em 32px; /* matching div.detail */
+}
+
+li.story.hidden *:not(div, .dropdown_parent, .dropdown_parent > div *, .comments_label, .link, .tags, img),
+li.story.hidden .score {
 	opacity: 0.25;
 }
+
 ol.show_hidden li.story.hidden {
 	opacity: 1.0 !important;
 }
@@ -1016,16 +1081,24 @@ div.comment_text code {
 	line-height: 1.2em;
 }
 
+.dropdown_parent {
+	position: relative;
+}
 
-#flag_why, .archive-dropdown {
+.comments_subtree .dropdown_parent > #flag_dropdown {
 	position: absolute;
-	left: 50%;
+	left: 0.25rem;
+}
+
+#flag_dropdown, .archive-dropdown {
+	position: absolute;
+	left: -0.125rem;
 	width: 100px;
 	border: 1px solid var(--color-box-border);
 	border-bottom: 0;
 	z-index: 15;
 }
-#flag_why a, .archive-dropdown a {
+#flag_dropdown a, .archive-dropdown a {
 	background-color: var(--color-box-bg);
 	border-bottom: 1px solid var(--color-box-border);
 	color: var(--color-fg-contrast-10);
@@ -1034,15 +1107,15 @@ div.comment_text code {
 	padding: 3px;
 	text-decoration: underline;
 }
-#flag_why a:hover, .archive-dropdown a:hover {
+#flag_dropdown a:hover, .archive-dropdown a:hover {
 	background-color: var(--color-box-bg-shaded);
 }
-#flag_why a.cancelreason {
+#flag_dropdown a.cancel-reason {
 	background-color: var(--color-box-bg-shaded);
 	font-size: 8pt;
 }
 
-#flag_why_shadow {
+#modal_backdrop {
 	position: fixed;
 	width: 100%;
 	height: 100%;
@@ -1053,35 +1126,25 @@ div.comment_text code {
 	z-index: 1;
 }
 
-/* archive; dropdown styling is with #flag_why to match it */
+/* archive; dropdown styling is with #flag_dropdown to match it */
 .archive_button {
 	display: none;
 }
 .archive_button:not(:checked) ~ .archive-dropdown {
 	display: none;
 }
-.archive_button:checked ~ .archive_dismiss {
-	display: block;
-}
-.archive_dismiss {
-	display: none;
-	position: fixed;
-	width: 100%;
-	height: 100%;
-	left: 0;
-	top: 0;
-	bottom: 0;
-	right: 0;
-	z-index: 14;
+.archive_button ~ label{
+	cursor: pointer;
 }
 
 
 
-div.markdown_help {
+.markdown_help {
 	background-color: var(--color-box-bg-shaded);
 	border: 1px solid var(--color-box-border);
 	padding: 0 1em;
 	margin-top: 0.5em;
+	display: none;
 }
 
 div.markdown_help_label {
@@ -1103,29 +1166,35 @@ div#story_preview {
 }
 
 div#story_box input#story_url {
-	width: 508px;
+	width: 512px;
 }
 div#story_box button#story_fetch_title {
+	height: 27px;
 	padding-top: 1px;
 	padding-bottom: 1px;
+	width: 84px;
 }
 div#story_box input#story_title,
 div#story_box input#story_moderation_reason,
-div#story_box input#story_merge_story_short_id {
+div#story_box input#story_merge_story_short_id,
+div#domain_box input[type=text] {
 	width: 600px;
 }
-div#story_box .title-reminder {
+#story_box .title-reminder, #story_box .title-reminder-thanks {
 	display: none;
+}
+#story_box details ul {
+	padding-left: 1em;
+}
+.slide-down {
+	display: block !important;
+	transition: height .5s ease !important;
 }
 div#story_box #story_tags_a {
 	width: 624px;
 }
 div#story_box textarea {
 	width: 600px;
-}
-div#story_box .actions {
-	margin-left: 7em;
-	width: 610px;
 }
 
 div.comment_form_container {
@@ -1145,6 +1214,7 @@ div.comment_form_container textarea {
 span.comment_unread {
 	color: var(--color-fg-accent);
 	font-weight: 600;
+	cursor: pointer;
 }
 
 /* trees */
@@ -1208,7 +1278,7 @@ ul.user_tree {
 	color: var(--color-fg-contrast-4-5);
 }
 
-/* /u/:username/standing */
+/* /~:username/standing */
 /* https://codepen.io/sosuke/pen/Pjoqqp */
 .unwarned {
 	filter: invert(36%) sepia(52%) saturate(0%) hue-rotate(292deg) brightness(96%) contrast(85%);
@@ -1225,7 +1295,6 @@ td.warned div, td.unwarned div {
 	text-align: center;
 	width: 1em;
 }
-
 
 /* /mod dashbaord */
 
@@ -1279,6 +1348,9 @@ table.data tr.nobottom td {
 	border-bottom: 0px;
 	padding-bottom: 0px;
 }
+table.data tr.nobottom td.wrap {
+	overflow-wrap: anywhere;
+}
 table.data.tall td {
 	vertical-align: top;
 }
@@ -1293,9 +1365,12 @@ table.data pre {
 	overflow-x: scroll;
 	max-width: 800px;
 }
-
+table.moderations tr > td:nth-child(1) {
+	white-space: nowrap;
+}
 
 /* boxes */
+
 .box label {
 	display: block;
 	float: left;
@@ -1363,7 +1438,7 @@ table.data pre {
 	font-style: italic;
 }
 .hint.indent {
-	margin-left: 1em;
+	margin-left: 12em;
 }
 
 .box.wide label {
@@ -1373,12 +1448,16 @@ table.data pre {
 	margin-left: 12em;
 }
 
+.display-block {
+	display: block;
+}
 
 /* for flash_notices() and flash_errors() */
 
 div.flash-error,
 div.flash-notice,
-div.flash-success {
+div.flash-success,
+div.user-stats {
 	position: relative;
 	padding: 7px 15px;
 	margin-bottom: 18px;
@@ -1394,10 +1473,11 @@ div.flash-success a {
 	font-weight: bold;
 	color: var(--color-fg-contrast-13);
 }
-div.flash-error p,
-div.flash-notice p,
-div.flash-success p {
-	margin-bottom: 0;
+div.flash-error .similar a,
+div.flash-notice .similar a,
+div.flash-success .similar a,
+div.user-stats a {
+	font-weight: normal;
 }
 div.flash-error div,
 div.flash-notice div,
@@ -1408,73 +1488,121 @@ div.flash-success div {
 }
 div.flash-error {
 	background-color: var(--color-flash-bg-error);
-	text-shadow: none;
 }
 div.flash-success {
 	background-color: var(--color-flash-bg-success);
-	text-shadow: none;
 }
 div.flash-notice {
 	background-color: var(--color-flash-bg-notice);
-	text-shadow: 0 -1px 0 var(--color-shadow-25);
+}
+div.user-stats {
+	background-color: var(--color-box-bg-shaded);
 }
 
 div.flash-error h2,
 div.flash-notice h2,
-div.flash-success h2 {
+div.flash-success h2,
+div.user-stats h2 {
 	font-size: 1.25em;
 	margin: 0;
 }
 
-/* select2 deuglification */
+/* Using #story_holder for precedence over TomSelect's vendored CSS  */
 
-.select2-container-multi.select2-container-active .select2-choices {
-	border: 1px solid var(--color-box-border-focus);
+#story_holder .ts-control {
+	background-color: var(--color-box-bg);
+	border: 1px solid var(--color-box-border);
+	border-radius: 0px;
+	box-shadow: none;
+	box-sizing: border-box;
+	margin-bottom: 2px;
+	padding: 2px 0 0px 5px;
+	/* supposed to be inherited from body, but TS overwrites */
+	font-family: "helvetica neue", arial, sans-serif;
+	font-size: 13.33px;
+	color: var(--color-fg);
+	line-height: 1.5rem;
 }
-.select2-container .select2-results .select2-highlighted {
+
+#story_holder .ts-control:focus-within {
+	border-color: var(--color-box-border-focus)
+}
+
+#story_holder .ts-control .data-ts-item { /* item already selected by user*/
+	color: var(--color-fgcontrast-10);
+	line-height: 13px;
+	margin: 3px 5px 3px 0;
+	padding: 3px 0.5rem 3px 1rem !important;
+	position: relative;
+	cursor: default;
+}
+
+#story_holder .ts-control .data-ts-item a {
+	display: block;
+	position: absolute;
+	height: 13px;
+	padding: 2px;
+	left: 0px;
+	margin-left: 0;
+	/*
+	For a decade, select2 had the `x` to remove a tag on the left. TomSelect puts it
+	on the right, so we hide that and insert an`x` on the left with `a::after` below.
+	*/
+	visibility: hidden;
+}
+
+#story_holder .ts-control .data-ts-item a::after {
+	content: "\2715";
+	display: block;
+	position: absolute;
+	color: grey;
+	font-size: 10px;
+	outline: none;
+	padding-right: 3px;
+	top: 0px;
+	width: 12px;
+	cursor: pointer;
+	visibility: visible;
+}
+
+#story_holder .ts-dropdown {
+	position: relative;
+	width: 100%;
+	background: #fff;
+	background-color: var(--color-box-bg);
+	border-color: var(--color-box-border-focus);
+	border-radius: 0 0 4px 4px;
+	border-top: 1px solid #aaa;
+	box-shadow: 0 4px rgb(0 0 0 / 15%);
+	margin: 0px;
+	padding: 0px;
+	z-index: 999;
+}
+
+#story_holder .ts-dropdown .ts-dropdown-content .active {
 	background: var(--color-bg-accent);
 	color: var(--color-box-bg);
 }
 
-.select2-container-multi .select2-choices {
-	border-color: var(--color-box-border);
-	background-color: var(--color-box-bg);
-	background-image: none;
-	padding-top: 2px;
+#story_holder .ts-dropdown-content {
+	max-height: 200px;
+	padding: 0;
+	position: relative;
+	overflow-x: hidden;
+	overflow-y: scroll;
 }
 
-.select2-container .select2-drop {
-	background-color: var(--color-box-bg);
-	border-color: var(--color-box-border-focus);
-}
-
-.select2-container-multi.select2-container-active .select2-choices {
-	box-shadow	: none;
-}
-
-.select2-container-active .select2-choice,
-.select2-container-active .select2-choices {
-	box-shadow	: none;
-}
-
-.select2-dropdown-open .select2-choice {
-	border-bottom-color: transparent;
-	box-shadow	: none;
-}
-
-.select2-container .select2-results li em {
-	background: none;
-	color: var(--color-fg-contrast-4-5);
-	font-style: italic;
-	padding-left: 0.5em;
-}
-
-.select2-container .select2-results .select2-highlighted em {
-	color: var(--color-box-bg);
+#story_holder .ts-dropdown .option {
+	color: var(--color-fg);
+	font-family: "helvetica neue", arial, sans-serif;
+	line-height: 80%;
+	margin: 0px;
+	padding: 7px 7px 8px;
+	cursor: pointer;
 }
 
 /* pushover */
-.pushover_button {
+input[type="submit"].link_post.pushover_button {
 	box-sizing: border-box;
 	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QAJQCeAPHNVUx7AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3wEPAh02ee0QVwAAACZpVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVAgb24gYSBNYWOV5F9bAAABqElEQVQ4y62TvUtbURjGf+fek2vQpMF2ED9QkfpR6VLaDoIEF0UKWQRBQ+yQP6GDU0Xw4y/obOgg6dDSJVS61MlBcXFQB6M1BsF+IES9NnrzcRy8xpvrBwH7bOflfc553+d5jsCF9tiRDwgBEaDXLi8B80AiGQ2Yzn7hIo8Cce5HOBkNfLo6aA7ydAVkgLjdez3BrS8rRbBJEmyU+AyBVVDE1i1SJ6psEmHvfOLktj0SjL/2snKQx8wpNg+LBJt0RjoN+j6bqOvN/ZotWAldtYK5gWpmV84YbPUw2ePlb7bI73+Kep+OLFONkGarXcK7l16+7+V57BW8qJMs7Ob5k4VQm4fVXzlyquyGiHRYBcC+WWQxnSP63AAgtn7O0FNJ9xOd0W+nbkF7pbsytXxOQw30N0t2MgX6Wzy8qtMJL5zy81jdsETaIXnjLL7trkLqGl+2svxI5/mwZt1l6ZJmJ6yEGqkYbveQOioQ2yiz7TbMa0DCWRnuMPBXaXzcsJx23YWEZmc7fJkqxdgzg8xZka/bFhVE2hSuKL+nMswko4GJ//KZxEO/8wVmfpjJTWeCTQAAAABJRU5ErkJggg==) 2px 2px no-repeat, linear-gradient(var(--color-fg-gradient-lit), var(--color-fg-gradient-shadowed));
 	border: 1px solid var(--color-box-border);
@@ -1492,6 +1620,26 @@ div.flash-success h2 {
 	text-decoration: none;
 	vertical-align: middle;
 }
+
+/* search */
+
+.searchresults summary .heading {
+	font-weight: bold;
+	font-size: 11pt; /* h2 */
+}
+.searchresults summary {
+	margin: 1em 0;
+}
+.search_parse dd {
+	margin-bottom: 0.5em;
+}
+.searchq {
+	background: var(--color-box-bg-shaded);
+	border-radius: 4px;
+	font-family: monospace;
+	padding: 2px;
+}
+
 
 @media screen and (min-width: 481px) {
 	body {
@@ -1546,6 +1694,17 @@ div.flash-success h2 {
 	.help {
 		margin-top: 2em;
 	}
+
+
+	div#story_box .actions {
+		margin-left: 7em;
+		width: 610px;
+	}
+	#story_holder .ts-control {
+		display: inline-block;
+		position: absolute;
+		width: 611px;
+	}
 }
 
 @media only screen and (max-width: 480px) {
@@ -1562,7 +1721,7 @@ div.flash-success h2 {
 	}
 	header#nav {
 		background-color: var(--color-box-bg-shaded);
-		border-bottom:: 1px solid var(--color-box-border);
+		border-bottom: 1px solid var(--color-box-border);
 		flex-flow: row nowrap;
 		height: 44px;
 		min-width: 100%;
@@ -1712,7 +1871,7 @@ div.flash-success h2 {
 		height: 7px;
 		left: 4px;
 		position: absolute;
-		width: 5px;
+		width: 5.4px;
 		z-index: 10;
 	}
 	ol.stories.list li.story .mobile_comments span:after {
@@ -1758,7 +1917,6 @@ div.flash-success h2 {
 		display: none;
 	}
 
-
 	li div.details {
 		margin: 0 0 0 36px;
 	}
@@ -1803,7 +1961,6 @@ div.flash-success h2 {
 	div#story_box #story_tags_a,
 	div.actions {
 		margin: 0 !important;
-		width: 100% !important;
 	}
 
 	div#story_box #story_tags_a {
@@ -1818,8 +1975,21 @@ div.flash-success h2 {
 		margin-left: 0;
 	}
 
+	#story_holder .ts-wrapper .multi {
+		margin-left: 0rem;
+	}
+
 	footer {
 		text-align: center;
 		float: none;
+	}
+	.indent {
+		margin-left: 2em;
+	}
+}
+@media print {
+	.comment_folder,
+	.comment_form {
+		display: none;
 	}
 }

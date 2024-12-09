@@ -9,7 +9,17 @@
   target="_blank">TOTP</a> application of choice:
   </p>
 
-  <%= raw @qr_svg %>
+  <div id="qrsvg">
+    <%= raw @qr_svg %>
+  </div>
+
+  <p>
+    Or to add to a device manually enter the secret:
+    <details>
+      <summary>Reveal Secret</summary>
+      <%= raw @qr_secret %>
+    </details>
+  </p>
 
   <p>
   Once you have finished registering with your TOTP application, proceed to

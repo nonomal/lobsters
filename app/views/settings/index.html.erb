@@ -1,27 +1,26 @@
 <% content_for :subnav do %>
-  <a href="/u/<%= @user.username %>">Public Profile</a>
+  <%= link_to 'Public Profile', @user %>
   <a href="/filters">Filtered Tags</a> |
-  <%= link_to "Logout", { :controller => "login", :action => "logout" },
-    :data => { :confirm => "Are you sure you want to logout?" },
-    :method => "post" %>
+  <%= link_post 'Logout', logout_path, confirm: 'Are you sure you want to logout?' %>
 <% end %>
 
 <div class="box wide">
-  <%= form_with model: @edit_user, url: settings_path, method: :post, id: 'edit_user', local: true do |f| %>
+  <%= form_with model: @edit_user, url: settings_path, method: :post, id: 'edit_user', namespace: 'edit_user' do |f| %>
     <%= errors_for f.object %>
 
     <div class="boxline">
       <%= f.label :username, "Username:", :class => "required" %>
       <%= f.text_field :username, :size => 15 %>
-      <span class="hint indent">
-        <tt><%= User.username_regex_s %></tt>
-      </span>
+      <div class="hint indent">
+        Format: <tt><%= User.username_regex_s %></tt><br>
+        Creates a <%= link_to 'modlog', moderations_path %> entry like "changed own username from '<%= @edit_user.username %>' to 'NewUsername'"
+      </div>
     </div>
 
     <div class="boxline">
       <%= f.label :current_password, "Current Password:",
         :class => "required" %>
-      <%= f.password_field :current_password, :name => "current_password", :size => 30 %>
+      <%= f.password_field :current_password, :name => "current_password", :size => 30, :autocomplete => "off" %>
     </div>
 
     <div class="boxline">
@@ -38,7 +37,7 @@
 
     <div class="boxline">
       <%= f.label :email, "E-mail Address:", :class => "required" %>
-      <%= f.email_field :email, :size => 40 %>
+      <%= f.email_field :email, :size => 40, :inputmode => "email" %>
     </div>
 
     <div class="boxline">
@@ -67,85 +66,6 @@
     <p>
     <%= f.submit "Save Account Settings" %>
     </p>
-
-    <br>
-
-    <h2>External Accounts</h2>
-
-    <div class="boxline">
-      <%= f.label :gravatar,
-        raw("<a href=\"https://gravatar.com/\">Gravatar</a>:"),
-        :class => "required" %>
-      <span>
-        Your avatar will be cached from the Gravatar icon for your e-mail
-        address above.
-        (<%= link_to "Expire cache", "/avatars/expire", :method => :post %>)
-      </span>
-    </div>
-
-    <% if Pushover.enabled? %>
-      <div class="boxline">
-        <%= f.label :pushover_user_key,
-          raw("<a href=\"https://pushover.net/\">Pushover</a>:"),
-          :class => "required" %>
-        <span>
-        <%= link_to((@edit_user.pushover_user_key.present??
-          "Manage Pushover Subscription" : "Subscribe With Pushover"),
-          "/settings/pushover_auth", :class => "pushover_button",
-          :method => :post) %>
-        <span class="hint indent">
-          For optional comment and message notifications below
-        </span>
-        </span>
-      </div>
-    <% end %>
-
-    <% if Github.enabled? %>
-      <div class="boxline">
-        <span>
-        <%= f.label :github_username,
-          raw("<a href=\"https://github.com/\">GitHub</a>:"),
-          :class => "required" %>
-        <% if @edit_user.github_username.present? %>
-          Linked to
-          <strong><a href="https://github.com/<%= h(@edit_user.github_username)
-            %>"><%= h(@edit_user.github_username) %></a></strong>
-            (<%= link_to "Disconnect", "/settings/github_disconnect",
-              :method => :post %>)
-        <% else %>
-          <a href="/settings/github_auth">Connect</a>
-        <% end %>
-        </span>
-      </div>
-    <% end %>
-
-    <% if Twitter.enabled? %>
-      <div class="boxline">
-        <%= f.label :twitter_username,
-          raw("<a href=\"https://twitter.com/\">Twitter</a>:"),
-          :class => "required" %>
-        <span>
-        <% if @edit_user.twitter_username.present? %>
-          Linked to
-          <strong><a href="https://twitter.com/<%= h(@edit_user.twitter_username)
-            %>">@<%= h(@edit_user.twitter_username) %></a></strong>
-            (<%= link_to "Disconnect", "/settings/twitter_disconnect",
-              :method => :post %>)
-        <% else %>
-          <a href="/settings/twitter_auth">Connect</a>
-        <% end %>
-        </span>
-      </div>
-    <% end %>
-
-    <% if Keybase.enabled? %>
-      <div class="boxline">
-        <%= f.label :kb_username, raw("<a href=\"https://keybase.io/\">Keybase</a>:"), :class => "required" %>
-        <span>
-          <%= render :partial => "keybase_proofs/proofs", locals: {user: @edit_user, for_self: true} %>
-        </span>
-      </div>
-    <% end %>
 
     <br>
 
@@ -178,7 +98,7 @@
         :class => "required" %>
       <%= f.check_box :pushover_replies %>
       <span class="hint indent">
-        Requires Pushover subscription above
+        Requires Pushover subscription below
       </span>
     </div>
 
@@ -196,7 +116,7 @@
         :class => "required" %>
       <%= f.check_box :pushover_mentions %>
       <span class="hint indent">
-        Requires Pushover subscription above
+        Requires Pushover subscription below
       </span>
     </div>
 
@@ -214,7 +134,7 @@
         :class => "required" %>
       <%= f.check_box :pushover_messages %>
       <span class="hint indent">
-        Requires Pushover subscription above
+        Requires Pushover subscription below
       </span>
     </div>
 
@@ -263,6 +183,15 @@
     <h2>Miscellaneous Settings</h2>
 
     <div class="boxline">
+      <%= f.label :show_email, "Show Email Address:",
+        :class => "required" %>
+      <%= f.check_box :show_email %>
+      <span class="hint indent">
+        Only shown to logged-in users
+      </span>
+    </div>
+
+    <div class="boxline">
       <%= f.label :show_story_previews, "Show Story Previews:",
         :class => "required" %>
       <%= f.check_box :show_story_previews %>
@@ -281,7 +210,85 @@
     </div>
 
     <br>
-    <%= f.submit "Save All Settings" %>
+    <br>
+
+    <%= f.submit "Save Account Settings" %>
+  <% end %>
+
+  <br>
+  <br>
+
+  <h2 name="external">External Accounts</h2>
+
+  <div class="boxline">
+    <%= label_tag :gravatar,
+      raw("<a href=\"https://gravatar.com/\">Gravatar</a>:"),
+      :class => "required" %>
+    <span>
+      Your avatar will be cached from the Gravatar icon for your e-mail address above.
+      <%= link_post "Expire cache", "/avatars/expire" %>
+    </span>
+  </div>
+
+  <% if Pushover.enabled? %>
+    <div class="boxline">
+      <%= label_tag :pushover_user_key,
+        raw("<a href=\"https://pushover.net/\">Pushover</a>:"),
+        :class => "required" %>
+      <span>
+        <%= link_post((@edit_user.pushover_user_key.present? ?
+          "Manage Pushover Subscription" : "Subscribe With Pushover"),
+          "/settings/pushover_auth", class_name: "pushover_button") %>
+        <span class="hint indent">
+          For optional comment and message notifications above
+        </span>
+      </span>
+    </div>
+  <% end %>
+
+  <% if Github.enabled? %>
+    <div class="boxline">
+      <span>
+      <%= label_tag :github_username,
+        raw("<a href=\"https://github.com/\">GitHub</a>:"),
+        :class => "required" %>
+      <% if @edit_user.github_username.present? %>
+        Linked to
+        <strong><a href="https://github.com/<%= h(@edit_user.github_username)
+          %>"><%= h(@edit_user.github_username) %></a></strong>
+          <%= link_post "Disconnect", "/settings/github_disconnect" %>
+      <% else %>
+        <a href="/settings/github_auth">Connect</a>
+      <% end %>
+      </span>
+    </div>
+  <% end %>
+
+  <% if Mastodon.enabled? %>
+    <div class="boxline">
+      <span>
+        <%= label_tag :mastodon_username,
+          raw("<a href=\"https://joinmastodon.org/\">Mastodon</a>:"),
+          :class => "required" %>
+        <% if @edit_user.mastodon_username.present? %>
+          Linked to
+          <strong><a href="https://<%= @edit_user.mastodon_instance %>/@<%= h(@edit_user.mastodon_username)
+            %>">@<%= h(@edit_user.mastodon_username) %>@<%=@edit_user.mastodon_instance%></a></strong>
+            <%= link_post "Disconnect", "/settings/mastodon_disconnect" %>
+        <% else %>
+          <a href="/settings/mastodon_authentication">Connect</a>
+        <% end %>
+      </span>
+    </div>
+  <% end %>
+
+  <% if Keybase.enabled? %>
+    <div class="boxline">
+      <%= label_tag :kb_username, raw("<a href=\"https://keybase.io/\">Keybase</a>:"), :class => "required" %>
+      <span>
+        <%= render :partial => "keybase_proofs/proofs", locals: {user: @edit_user, for_self: true} %>
+      </span>
+    </div>
   <% end %>
 
   <br>
@@ -299,7 +306,8 @@
   <br>
 
   <div class="deletion">
-      <%= form_with model: @edit_user, url: delete_account_path, method: :post, id: 'delete_user', local: true do |f| %>
+    <%= form_with model: @edit_user, url: delete_account_path, method: :post, id: 'delete_user', namespace: 'delete_user' do |f| %>
+
       <h2>Delete Account</h2>
 
       <p>
@@ -313,7 +321,7 @@
         <li>
           Your comments with negative scores will be deleted, and you can check "disown comments"
           below if you want all of your stories and comments to change to list
-          <a href="/u/inactive-user">inactive-user</a> instead of your username.
+          <a href="/~inactive-user">inactive-user</a> instead of your username.
         </li>
       </ul>
 
